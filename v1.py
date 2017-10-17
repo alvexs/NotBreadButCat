@@ -61,7 +61,7 @@ model.compile(loss='binary_crossentropy',
               optimizer='rmsprop',
               metrics=['accuracy'])
 
-# testing augmentation
+# training augmentation
 train_datagen = ImageDataGenerator(
     rescale=1. / 255,
     shear_range=0.2,
