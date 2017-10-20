@@ -8,7 +8,7 @@ from keras import optimizers
 import numpy as np
 import pandas as pd
 import h5py
-
+import os.path
 import matplotlib.pyplot as plt
 
 # dimensions of images.
@@ -51,12 +51,14 @@ model.add(Dense(1))
 model.add(Activation('sigmoid'))
 
 # loading weights
-model.load_weights('third_try.h5')
+if(os.path.exists('third_try.h5')):
+    model.load_weights('third_try.h5')
+else:
+    print('Веса не загружены.')
+# for layer in model.layers:
+#    layer.trainable = False
 
-for layer in model.layers:
-    layer.trainable = False
-
-sgd = optimizers.SGD(lr=0.01, decay=1e-6, momentum=0.9, nesterov=True)
+# sgd = optimizers.SGD(lr=0.01, decay=1e-6, momentum=0.9, nesterov=True)
 model.compile(loss='binary_crossentropy',
               optimizer='rmsprop',
               metrics=['accuracy'])
@@ -109,7 +111,6 @@ plt.figure(figsize=(12, 12))
 for ind, val in enumerate(result[:16]):
     plt.subplot(4, 4, ind + 1)
     im = val[0]
-
     if (int(val[1]) == 1):
         lb = 'кот'
         cl = 'blue'
@@ -118,6 +119,6 @@ for ind, val in enumerate(result[:16]):
         cl = 'red'
     plt.axis('off')
     plt.text(60, -8, lb, fontsize=20, color=cl)
-    "plt.text(0, -8, val[2], fontsize=12, color='blue')"
+    #plt.text(0, -8, val[2], fontsize=12, color='blue')
     plt.imshow(np.transpose(im, (0, 1, 2)))
 plt.show()
