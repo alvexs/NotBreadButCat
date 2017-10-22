@@ -11,8 +11,7 @@ import h5py
 import os.path
 import matplotlib.pyplot as plt
 
-# path to the model weights files.
-weights_path = 'data/weights/vgg16_weights.h5'
+
 top_model_weights_path = 'v5_weights.h5'
 # dimensions of images.
 img_width, img_height = 150, 150
