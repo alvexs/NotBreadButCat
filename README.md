@@ -3,3 +3,12 @@
 Lab3 on course "Decision Support Methods"
 
 Лабараторная работа №3 по курсу "Методы поддержки принятия решений"
+
+
+### Usage:
+
+```
+fab demo
+fab train
+fab predict <file>
+```

@@ -1,124 +1,156 @@
+import os.path
+import numpy as np
+import matplotlib.pyplot as plt
 from keras.preprocessing.image import ImageDataGenerator
 from keras.models import Sequential
 from keras.layers import Conv2D, MaxPooling2D
 from keras.layers import Activation, Dropout, Flatten, Dense
 from keras import backend as K
 from keras.preprocessing import image
-from keras import optimizers
-import numpy as np
-import pandas as pd
 import h5py
-import os.path
-import matplotlib.pyplot as plt
+
 
 # dimensions of images.
-img_width, img_height = 150, 150
+img_width, img_height = [150] * 2
 
 train_data_dir = 'data/trainbread'
 validation_data_dir = 'data/validationbread'
 test_data_dir = 'data/testbread'
 nb_train_samples = 2000
 nb_validation_samples = 800
-epochs = 0
+epochs = 10
 batch_size = 16
 
-# set data format for different backend (Theano/TensorFlow)
-if K.image_data_format() == 'channels_first':
-    input_shape = (3, img_width, img_height)
-else:
-    input_shape = (img_width, img_height, 3)
 
-# create model
-model = Sequential()
+def create_model():
+    # set data format for different backend (Theano/TensorFlow)
+    if K.image_data_format() == 'channels_first':
+        input_shape = (3, img_width, img_height)
+    else:
+        input_shape = (img_width, img_height, 3)
 
-model.add(Conv2D(32, (3, 3), input_shape=input_shape))
-model.add(Activation('relu'))
-model.add(MaxPooling2D(pool_size=(2, 2)))
+    # create model
+    model = Sequential()
 
-model.add(Conv2D(32, (3, 3)))
-model.add(Activation('relu'))
-model.add(MaxPooling2D(pool_size=(2, 2)))
+    model.add(Conv2D(32, (3, 3), input_shape=input_shape))
+    model.add(Activation('relu'))
+    model.add(MaxPooling2D(pool_size=(2, 2)))
 
-model.add(Conv2D(64, (3, 3)))
-model.add(Activation('relu'))
-model.add(MaxPooling2D(pool_size=(2, 2)))
+    model.add(Conv2D(32, (3, 3)))
+    model.add(Activation('relu'))
+    model.add(MaxPooling2D(pool_size=(2, 2)))
 
-model.add(Flatten())
-model.add(Dense(64))
-model.add(Activation('relu'))
-model.add(Dropout(0.5))
-model.add(Dense(1))
-model.add(Activation('sigmoid'))
+    model.add(Conv2D(64, (3, 3)))
+    model.add(Activation('relu'))
+    model.add(MaxPooling2D(pool_size=(2, 2)))
 
-# loading weights
-if(os.path.exists('third_try.h5')):
-    model.load_weights('third_try.h5')
-else:
-    print('Веса не загружены.')
-# for layer in model.layers:
-#    layer.trainable = False
+    model.add(Flatten())
+    model.add(Dense(64))
+    model.add(Activation('relu'))
+    model.add(Dropout(0.5))
+    model.add(Dense(1))
+    model.add(Activation('sigmoid'))
 
-# sgd = optimizers.SGD(lr=0.01, decay=1e-6, momentum=0.9, nesterov=True)
-model.compile(loss='binary_crossentropy',
-              optimizer='rmsprop',
-              metrics=['accuracy'])
+    return model
 
-# training augmentation
-train_datagen = ImageDataGenerator(
-    rescale=1. / 255,
-    shear_range=0.2,
-    zoom_range=0.2,
-    horizontal_flip=True)
+def train(model):
+    model.compile(loss='binary_crossentropy',
+                  optimizer='rmsprop',
+                  metrics=['accuracy'])
 
-# validation and test augmentation. Only rescaling
-test_datagen = ImageDataGenerator(rescale=1. / 255)
+    # training augmentation
+    train_datagen = ImageDataGenerator(
+        rescale=1. / 255,
+        shear_range=0.2,
+        zoom_range=0.2,
+        horizontal_flip=True)
 
-train_generator = train_datagen.flow_from_directory(
-    train_data_dir,
-    target_size=(img_width, img_height),
-    batch_size=batch_size,
-    class_mode='binary')
+    test_datagen = ImageDataGenerator(rescale=1. / 255)
 
-validation_generator = test_datagen.flow_from_directory(
-    validation_data_dir,
-    target_size=(img_width, img_height),
-    batch_size=batch_size,
-    class_mode='binary')
+    train_generator = train_datagen.flow_from_directory(
+        train_data_dir,
+        target_size=(img_width, img_height),
+        batch_size=batch_size,
+        class_mode='binary')
 
-pred_generator = test_datagen.flow_from_directory(
-    test_data_dir,
-    target_size=(150, 150),
-    batch_size=100,
-    class_mode='binary')
+    validation_generator = test_datagen.flow_from_directory(
+        validation_data_dir,
+        target_size=(img_width, img_height),
+        batch_size=batch_size,
+        class_mode='binary')
 
-model.fit_generator(
-    train_generator,
-    steps_per_epoch=nb_train_samples // batch_size,
-    epochs=epochs,
-    validation_data=validation_generator,
-    validation_steps=nb_validation_samples // batch_size)
+    model.fit_generator(
+        train_generator,
+        steps_per_epoch=nb_train_samples // batch_size,
+        epochs=epochs,
+        validation_data=validation_generator,
+        validation_steps=nb_validation_samples // batch_size)
 
-model.save_weights('third_try.h5')
+    model.save_weights('weights.h5')
 
-imgs, labels = pred_generator.next()
-array_imgs = np.asarray([image.img_to_array(img) for img in imgs])
-predictions = model.predict(imgs)
-rounded_pred = np.asarray([np.round(i) for i in predictions])
+    print('training completed --> weights.h5')
 
-result = [im for im in zip(array_imgs, rounded_pred, labels, predictions)]
+def run_demo():
+    model = create_model()
 
-plt.figure(figsize=(12, 12))
-for ind, val in enumerate(result[:16]):
-    plt.subplot(4, 4, ind + 1)
-    im = val[0]
-    if (int(val[1]) == 1):
-        lb = 'кот'
-        cl = 'blue'
-    if (int(val[1]) == 0):
-        lb = 'хлеб'
-        cl = 'red'
-    plt.axis('off')
-    plt.text(60, -8, lb, fontsize=20, color=cl)
-    #plt.text(0, -8, val[2], fontsize=12, color='blue')
-    plt.imshow(np.transpose(im, (0, 1, 2)))
-plt.show()
+    # loading weights
+
+    if os.path.exists('weights.h5'):
+        model.load_weights('weights.h5')
+    else:
+        train(model)
+
+    # validation and test augmentation. Only rescaling
+    test_datagen = ImageDataGenerator(rescale=1. / 255)
+
+    pred_generator = test_datagen.flow_from_directory(
+        test_data_dir,
+        target_size=(150, 150),
+        batch_size=100,
+        class_mode='binary')
+
+    imgs, labels = pred_generator.next()
+    array_imgs = np.asarray(
+        [image.img_to_array(img) for img in imgs])
+    predictions = model.predict(imgs)
+    rounded_pred = np.asarray([np.round(i) for i in predictions])
+
+    result = [im for im in
+              zip(array_imgs, rounded_pred, labels, predictions)]
+
+    plt.figure(figsize=(12, 12))
+    for ind, val in enumerate(result[:16]):
+        plt.subplot(4, 4, ind + 1)
+        im = val[0]
+        if int(val[1]):
+            lb = 'kot'
+            cl = 'blue'
+        else:
+            lb = 'hleb'
+            cl = 'red'
+        plt.axis('off')
+        plt.text(50, -4, lb, fontsize=20, color=cl)
+        plt.imshow(np.transpose(im, (0, 1, 2)))
+    plt.show()
+
+def run_training():
+    model = create_model()
+    train(model)
+
+def recognize(target):
+    model = create_model()
+
+    #loading weights
+    if os.path.exists('weights.h5'):
+        model.load_weights('weights.h5')
+    else:
+        train(model)
+
+    if os.path.exists(target) and os.path.isfile(target):
+        img = image.load_img(target, target_size=(img_width, img_height))
+        x = image.img_to_array(img)
+        x = np.expand_dims(x, axis=0)
+        prediction = model.predict(x)
+        print(prediction)
+    else:
+        raise IOError('No such file')
