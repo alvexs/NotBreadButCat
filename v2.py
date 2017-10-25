@@ -115,7 +115,7 @@ def run_demo_v2():
     test_datagen = ImageDataGenerator(rescale=1. / 255)
 
     pred_generator = test_datagen.flow_from_directory(
-        test_data_dir,
+        validation_data_dir,
         target_size=(150, 150),
         batch_size=100,
         class_mode='binary')
@@ -129,19 +129,18 @@ def run_demo_v2():
     result = [im for im in
               zip(array_imgs, rounded_pred, labels, predictions)]
 
-    plt.figure(figsize=(12, 12))
     for ind, val in enumerate(result[:16]):
         plt.subplot(4, 4, ind + 1)
         im = val[0]
         if int(val[1]):
-            lb = 'Cat'
+            lb = 'Кот'
             cl = 'blue'
         else:
-            lb = 'Bread'
+            lb = 'Хлеб'
             cl = 'red'
         plt.axis('off')
         plt.text(50, -4, lb, fontsize=20, color=cl)
-        plt.imshow(im)
+        plt.imshow(np.transpose(im, (0, 1, 2)))
     plt.show()
 
 def run_training_v2(lr, image_dir):
@@ -162,10 +161,15 @@ def recognize_v2(target):
         x = image.img_to_array(img)
         x = np.expand_dims(x, axis=0)
         prediction = model.predict(x)
-        result = 'cat' if prediction else 'bread'
         raw_img = matplotlib.image.imread(target)
         plt.imshow(raw_img)
-        plt.text(0, -2, 'I think this is a {}'.format(result), fontsize=20)
+        if prediction:
+            result = 'cat'
+            plt.text(0, -20, 'Я не хлеб, я кот! Не ешьте меня!', fontsize=20)
+        else:
+            result = 'bread'
+            plt.text(50, -60, 'Это сладкий хлебушек.', fontsize=20)
+            plt.text(50, -5, 'Кушайте на здоровье!', fontsize=20)
         plt.axis("off")
         plt.show()
     else:
