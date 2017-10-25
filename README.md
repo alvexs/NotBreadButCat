@@ -5,6 +5,9 @@ Lab3 on course "Decision Support Methods"
 Лабараторная работа №3 по курсу "Методы поддержки принятия решений"
 
 
+[Report](https://github.com/alvexs/NotBreadButCat/blob/master/Lab2_report.pdf)
+
+
 ## Usage:
 
 ### Own model
