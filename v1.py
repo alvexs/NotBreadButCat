@@ -1,5 +1,6 @@
 import os.path
 import numpy as np
+import matplotlib.image
 import matplotlib.pyplot as plt
 from keras.preprocessing.image import ImageDataGenerator
 from keras.models import Sequential
@@ -7,6 +8,7 @@ from keras.layers import Conv2D, MaxPooling2D
 from keras.layers import Activation, Dropout, Flatten, Dense
 from keras import backend as K
 from keras.preprocessing import image
+from keras import optimizers
 import h5py
 
 
@@ -53,9 +55,25 @@ def create_model():
 
     return model
 
-def train(model):
+def train(model, lr=1e-4, image_dir=train_data_dir):
+    if type(lr) not in ['float', 'int'] or not 0 <= lr <= 1:
+        # Default learning rate
+        lr = 0.001
+
+    huge_dir_expression = type(image_dir) is 'str'\
+                          and os.path.isdir(
+                            os.path.join(image_dir, 'bread'))\
+                          and os.path.isdir(
+                            os.path.join(image_dir, 'cats'))
+
+    if not huge_dir_expression:
+        # Default train data dir
+        image_dir = train_data_dir
+
+    optimizer = optimizers.SGD(lr=lr, momentum=0.9)
+
     model.compile(loss='binary_crossentropy',
-                  optimizer='rmsprop',
+                  optimizer=optimizer,
                   metrics=['accuracy'])
 
     # training augmentation
@@ -68,7 +86,7 @@ def train(model):
     test_datagen = ImageDataGenerator(rescale=1. / 255)
 
     train_generator = train_datagen.flow_from_directory(
-        train_data_dir,
+        image_dir,
         target_size=(img_width, img_height),
         batch_size=batch_size,
         class_mode='binary')
@@ -133,9 +151,9 @@ def run_demo():
         plt.imshow(np.transpose(im, (0, 1, 2)))
     plt.show()
 
-def run_training():
+def run_training(lr, image_dir):
     model = create_model()
-    train(model)
+    train(model, lr, image_dir)
 
 def recognize(target):
     model = create_model()
@@ -146,11 +164,18 @@ def recognize(target):
     else:
         train(model)
 
-    if os.path.exists(target) and os.path.isfile(target):
+    if os.path.isfile(target):
         img = image.load_img(target, target_size=(img_width, img_height))
         x = image.img_to_array(img)
+        x /= 255
         x = np.expand_dims(x, axis=0)
         prediction = model.predict(x)
-        print(prediction)
+        rounded = np.round(prediction[0][0])
+        result = 'cat' if rounded else 'bread'
+        raw_img = matplotlib.image.imread(target)
+        plt.imshow(raw_img)
+        plt.text(0, 0, 'I think this is a {}'.format(result), fontsize=20)
+        plt.axis("off")
+        plt.show()
     else:
         raise IOError('No such file')

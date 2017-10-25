@@ -6,5 +6,5 @@ def demo():
 def predict(target):
     recognize(target)
 
-def train():#image_dir, speed):
-    run_training()
+def train(lr=None, image_dir=None):
+    run_training(lr, image_dir)

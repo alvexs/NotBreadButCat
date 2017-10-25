@@ -9,6 +9,6 @@ Lab3 on course "Decision Support Methods"
 
 ```
 fab demo
-fab train
-fab predict <file>
+fab train:<lr>,<image_dir> (default - 'fab train' or 'fab train:0.001,data/trainbread')
+fab predict:<file>
 ```
