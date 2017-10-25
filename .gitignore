@@ -102,3 +102,26 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+
+.gitattributes
+.idea/
+LICENSE
+bottleneck_fc_model.h5
+bottleneck_features_test.npy
+bottleneck_features_train.npy
+bottleneck_features_validation.npy
+data/bread/
+data/testbread/Thumbs.db
+data/testbread/testimages/Thumbs.db
+data/trainbread/bread/Thumbs.db
+data/validationbread/bread/Thumbs.db
+data/weights/
+first_try.h5
+second_try.h5
+third2_try.h5
+v3.py
+v4.py
+v6.py
+v5.py
+v7.py
+v5_weights.h5
