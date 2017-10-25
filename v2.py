@@ -162,7 +162,6 @@ def recognize_v2(target):
         x = image.img_to_array(img)
         x = np.expand_dims(x, axis=0)
         prediction = model.predict(x)
-
         result = 'cat' if prediction else 'bread'
         raw_img = matplotlib.image.imread(target)
         plt.imshow(raw_img)

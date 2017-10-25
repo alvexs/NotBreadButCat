@@ -167,11 +167,9 @@ def recognize(target):
     if os.path.isfile(target):
         img = image.load_img(target, target_size=(img_width, img_height))
         x = image.img_to_array(img)
-        x /= 255
         x = np.expand_dims(x, axis=0)
         prediction = model.predict(x)
-        rounded = np.round(prediction[0][0])
-        result = 'cat' if rounded else 'bread'
+        result = 'cat' if prediction else 'bread'
         raw_img = matplotlib.image.imread(target)
         plt.imshow(raw_img)
         plt.text(0, 0, 'I think this is a {}'.format(result), fontsize=20)
